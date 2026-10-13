@@ -115,16 +115,26 @@ order-matching-engine/
 ├── include/                # header files (.h) = "declarations" (like a Java interface)
 │   ├── Order.h             # Order struct, Side & OrderType enums
 │   ├── Trade.h             # Trade struct
-│   ├── OrderBook.h         # OrderBook class declaration
-│   └── CommandParser.h     # turns text into commands
+│   ├── OrderBook.h         # OrderBook class – one stock's book + matching
+│   ├── MarketStats.h       # last price, volume, VWAP           (upgrade 4)
+│   ├── Exchange.h          # holds one OrderBook per symbol     (upgrade 1)
+│   ├── CommandParser.h     # turns text into commands
+│   ├── CsvLoader.h         # reads orders from a CSV file       (upgrade 2)
+│   └── Display.h           # colored live order book screen     (upgrade 3)
 ├── src/                    # source files (.cpp) = "implementations"
 │   ├── OrderBook.cpp       # matching logic lives here
+│   ├── MarketStats.cpp
+│   ├── Exchange.cpp
 │   ├── CommandParser.cpp
+│   ├── CsvLoader.cpp
+│   ├── Display.cpp
 │   └── main.cpp            # program entry point (the terminal loop)
 ├── tests/
 │   └── OrderBookTests.cpp  # GoogleTest unit tests
 ├── bench/
 │   └── Benchmark.cpp       # measures orders/second
+├── data/
+│   └── sample_orders.csv   # sample orders to replay
 └── docs/                   # these documents
 ```
 
@@ -149,21 +159,49 @@ order-matching-engine/
 
 ## 6. Terminal Commands (what the finished program will do)
 
+| Command | Example |
+|---|---|
+| Limit order | `BUY AAPL LIMIT 100 150.00` |
+| Market order | `SELL AAPL MARKET 20` |
+| Cancel | `CANCEL 1` |
+| Show a book | `BOOK AAPL` |
+| Load a CSV file | `LOAD data/sample_orders.csv` |
+| Quit | `QUIT` |
+
 ```
-> BUY LIMIT 100 150.00
+> BUY AAPL LIMIT 100 150.25
 Order #1 added to book
-> SELL LIMIT 30 149.00
-TRADE: 30 @ 150.00 (buy #1, sell #2)
-> SELL MARKET 20
-TRADE: 20 @ 150.00 (buy #1, sell #3)
-> BOOK
---- ASKS ---
---- BIDS ---
-150.00 | 50
-> CANCEL 1
-Order #1 cancelled
+> SELL AAPL LIMIT 30 149.00
+TRADE AAPL: 30 @ 150.25 (buy #1, sell #2)
+> BOOK AAPL
+=================== AAPL ===================
+   Last: 150.25   Volume: 30   Spread: --
+--------------------------------------------
+   ASKS   (none)
+--------------------------------------------
+   BIDS   150.25 |    70
+============================================
+> LOAD data/sample_orders.csv
+Loaded 10,000 orders -> 6,214 trades in 12 ms
 > QUIT
 ```
+(Bids show in **green**, asks in **red** in the terminal.)
+
+### CSV format (upgrade 2)
+```
+side,symbol,type,quantity,price
+BUY,AAPL,LIMIT,100,150.25
+SELL,TSLA,MARKET,50,
+```
+
+### Market stats (upgrade 4)
+| Stat | Meaning |
+|---|---|
+| Last price | Price of the most recent trade |
+| Volume | Total shares traded |
+| Best bid / ask | Top of each side of the book |
+| Spread | Best ask − best bid |
+| VWAP | Volume-weighted average price = Σ(price × qty) / Σ(qty) |
 
 ---
 
@@ -172,8 +210,7 @@ Order #1 cancelled
 - No networking / servers
 - No multithreading
 - No database
-- No GUI
-- Only one stock symbol
+- No GUI (terminal only)
 - No user accounts
 
 These can be "future improvements" to mention in interviews.
@@ -197,6 +234,8 @@ These can be "future improvements" to mention in interviews.
 
 ## 9. Build Milestones (after learning)
 
+**Part A – Core engine (~600 lines)**
+
 | # | Milestone | What you'll have |
 |---|---|---|
 | 1 | Setup + "Hello World" with CMake | Toolchain works |
@@ -206,5 +245,16 @@ These can be "future improvements" to mention in interviews.
 | 5 | Market orders + cancel | Feature complete |
 | 6 | `CommandParser` + terminal loop in `main.cpp` | Usable program |
 | 7 | GoogleTest unit tests | Proven correct |
-| 8 | Benchmark (orders/sec) | A real number for your resume |
-| 9 | README + push to GitHub | Done |
+
+**Part B – Upgrades (~+400 lines)**
+
+| # | Milestone | What you'll have |
+|---|---|---|
+| 8 | `Exchange` – multiple stocks (`std::unordered_map<std::string, OrderBook>`) | AAPL, TSLA, ... |
+| 9 | `MarketStats` – last price, volume, spread, VWAP | Real market data |
+| 10 | `Display` – colored live order book | Looks like a trading screen |
+| 11 | `CsvLoader` – replay orders from a file | Load thousands of orders |
+| 12 | Benchmark (1M orders/sec) | A real number for your resume |
+| 13 | README + push to GitHub | Done |
+
+**Total: ~1,000 lines.**

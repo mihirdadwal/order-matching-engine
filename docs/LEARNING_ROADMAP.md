@@ -99,6 +99,12 @@ then do the same with `std::greater<int>` and print highest→lowest.
 - [ ] `<chrono>` – `std::chrono::steady_clock::now()` to time code
 - [ ] Debugging in VS Code (breakpoints)
 
+**Needed for the upgrades:**
+- [ ] Reading files with `std::ifstream` + `std::getline` (for the CSV loader)
+- [ ] Splitting a CSV line by `,` using `std::getline(stream, field, ',')`
+- [ ] Formatted output with `<iomanip>`: `std::setw`, `std::fixed`, `std::setprecision`
+- [ ] ANSI color codes in the terminal (e.g. `"\033[32m"` = green, `"\033[0m"` = reset)
+
 Resources: [CMake tutorial](https://cmake.org/cmake/help/latest/guide/tutorial/index.html),
 [GoogleTest primer](https://google.github.io/googletest/primer.html)
 
