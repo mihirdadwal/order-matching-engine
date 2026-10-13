@@ -9,11 +9,18 @@ project(OrderMatchingEngine LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Compile engine executable from our source files
-add_executable(engine
-    src/main.cpp
+set(ENGINE_SOURCES
     src/OrderBook.cpp
     src/CommandParser.cpp
+    src/MarketStats.cpp
+    src/Display.cpp
+    src/Exchange.cpp
+)
+
+# Main interactive engine executable
+add_executable(engine
+    src/main.cpp
+    ${ENGINE_SOURCES}
 )
 target_include_directories(engine PRIVATE include)
 target_compile_options(engine PRIVATE -Wall -Wextra)
@@ -37,8 +44,7 @@ enable_testing()
 
 add_executable(order_tests
     tests/OrderBookTests.cpp
-    src/OrderBook.cpp
-    src/CommandParser.cpp
+    ${ENGINE_SOURCES}
 )
 target_include_directories(order_tests PRIVATE include)
 target_link_libraries(order_tests PRIVATE gtest_main)

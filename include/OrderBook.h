@@ -45,6 +45,8 @@ public:
     // Getters
     const std::string& getSymbol() const { return symbol_; }
     const std::vector<Trade>& getTradeHistory() const { return tradeHistory_; }
+    const std::map<Price, std::deque<Order>, std::greater<Price>>& getBids() const { return bids_; }
+    const std::map<Price, std::deque<Order>>& getAsks() const { return asks_; }
 
 private:
     std::string symbol_;
