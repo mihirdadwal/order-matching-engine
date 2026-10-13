@@ -1,42 +1,55 @@
-// main.cpp – program entry point
-// Milestone 2 check: Test creating Order and Trade objects.
+// main.cpp – Demonstrates OrderBook matching, partial fills, and cancellation
 
 #include <iostream>
-#include "Order.h"
-#include "Trade.h"
+#include "OrderBook.h"
 
 int main() {
-    std::cout << "==========================================\n";
-    std::cout << "  Order Matching Engine - Data Model Demo \n";
-    std::cout << "==========================================\n";
+    std::cout << "========================================================\n";
+    std::cout << "        ORDER MATCHING ENGINE - LIVE SIMULATION         \n";
+    std::cout << "========================================================\n";
 
-    // 1. Create a Buy Limit Order ($150.25 for 100 shares of AAPL)
-    Order buyOrder(1, "AAPL", Side::Buy, OrderType::Limit, 15025, 100);
+    OrderBook book("AAPL");
 
-    std::cout << "Created Order:\n"
-              << "  ID:       #" << buyOrder.id << "\n"
-              << "  Symbol:   " << buyOrder.symbol << "\n"
-              << "  Side:     " << toString(buyOrder.side) << "\n"
-              << "  Type:     " << toString(buyOrder.type) << "\n"
-              << "  Price:    " << buyOrder.price << " cents ($" << (buyOrder.price / 100.0) << ")\n"
-              << "  Qty:      " << buyOrder.remainingQuantity << " shares\n\n";
+    // 1. Place initial resting Limit Orders on the book
+    std::cout << "\n[Step 1] Seeding order book with initial limit orders...\n";
+    book.addOrder(Order(1, "AAPL", Side::Buy,  OrderType::Limit, 15000, 100)); // Buy 100 @ $150.00
+    book.addOrder(Order(2, "AAPL", Side::Buy,  OrderType::Limit, 14950, 200)); // Buy 200 @ $149.50
+    book.addOrder(Order(3, "AAPL", Side::Sell, OrderType::Limit, 15100,  50)); // Sell 50 @ $151.00
+    book.addOrder(Order(4, "AAPL", Side::Sell, OrderType::Limit, 15150, 150)); // Sell 150 @ $151.50
 
-    // 2. Simulate matching 40 shares and creating a Trade
-    Quantity tradeQty = 40;
-    buyOrder.remainingQuantity -= tradeQty;
+    book.printBook();
 
-    Trade trade("AAPL", buyOrder.id, 2 /* seller id */, buyOrder.price, tradeQty);
+    // 2. Incoming aggressive SELL order that partially matches resting Buy #1
+    std::cout << "[Step 2] Incoming SELL LIMIT 40 @ $150.00 (Order #5)...\n";
+    auto trades = book.addOrder(Order(5, "AAPL", Side::Sell, OrderType::Limit, 15000, 40));
 
-    std::cout << "Executed Trade:\n"
-              << "  Symbol:   " << trade.symbol << "\n"
-              << "  Buyer:    #" << trade.buyOrderId << "\n"
-              << "  Seller:   #" << trade.sellOrderId << "\n"
-              << "  Quantity: " << trade.quantity << " shares\n"
-              << "  Price:    " << trade.priceString() << "\n\n";
+    for (const auto& trade : trades) {
+        std::cout << "  -> EXECUTION: " << trade.quantity << " shares @ "
+                  << trade.priceString() << " (Buyer #" << trade.buyOrderId
+                  << ", Seller #" << trade.sellOrderId << ")\n";
+    }
 
-    std::cout << "Buyer remaining shares: " << buyOrder.remainingQuantity << "\n";
-    std::cout << "Is buyer filled? " << (buyOrder.isFilled() ? "Yes" : "No") << "\n";
-    std::cout << "==========================================\n";
+    book.printBook();
 
+    // 3. Incoming MARKET BUY order (sweeps the best ask of 50 shares @ $151.00 + 10 shares @ $151.50)
+    std::cout << "[Step 3] Incoming BUY MARKET 60 shares (Order #6)...\n";
+    trades = book.addOrder(Order(6, "AAPL", Side::Buy, OrderType::Market, 0, 60));
+
+    for (const auto& trade : trades) {
+        std::cout << "  -> EXECUTION: " << trade.quantity << " shares @ "
+                  << trade.priceString() << " (Buyer #" << trade.buyOrderId
+                  << ", Seller #" << trade.sellOrderId << ")\n";
+    }
+
+    book.printBook();
+
+    // 4. Cancel Order #2 (the resting buy of 200 @ $149.50)
+    std::cout << "[Step 4] Cancelling Order #2...\n";
+    bool cancelled = book.cancelOrder(2);
+    std::cout << "  -> Cancel successful? " << (cancelled ? "YES" : "NO") << "\n";
+
+    book.printBook();
+
+    std::cout << "Simulation completed successfully!\n";
     return 0;
 }
