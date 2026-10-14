@@ -18,6 +18,7 @@ enum class CommandType {
     AddOrder,       // e.g. "BUY LIMIT 100 150.00" or "BUY AAPL LIMIT 100 150.00"
     CancelOrder,    // e.g. "CANCEL 2"
     PrintBook,      // e.g. "BOOK" or "BOOK AAPL"
+    LoadFile,       // e.g. "LOAD data/sample_orders.csv"
     Help,           // e.g. "HELP"
     Quit,           // e.g. "QUIT" or "EXIT"
     Unknown         // Unrecognized or malformed command
@@ -28,6 +29,7 @@ struct ParsedCommand {
     std::optional<Order> order;
     std::optional<OrderId> orderIdToCancel;
     std::string symbol{"AAPL"};
+    std::string filePath;
     std::string errorMessage;
 };
 
@@ -40,6 +42,7 @@ public:
 
     // Resets order ID counter (useful for testing)
     void resetOrderIdCounter() { nextOrderId_ = 1; }
+    OrderId& getNextOrderIdRef() { return nextOrderId_; }
 
 private:
     OrderId nextOrderId_{1};

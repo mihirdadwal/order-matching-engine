@@ -7,6 +7,7 @@
 #include "Exchange.h"
 #include "CommandParser.h"
 #include "Display.h"
+#include "CsvLoader.h"
 
 void printHelp() {
     std::cout << "\n=================== AVAILABLE COMMANDS ===================\n"
@@ -19,11 +20,13 @@ void printHelp() {
               << "                    e.g., BUY AAPL MARKET 30\n"
               << " 3. View Book:      BOOK [SYMBOL]\n"
               << "                    e.g., BOOK AAPL  or  BOOK\n"
-              << " 4. Cancel Order:   CANCEL <orderId>\n"
+              << " 4. Replay CSV:     LOAD <filePath>\n"
+              << "                    e.g., LOAD data/sample_orders.csv\n"
+              << " 5. Cancel Order:   CANCEL <orderId>\n"
               << "                    e.g., CANCEL 1\n"
-              << " 5. Active Stocks:  SYMBOLS\n"
-              << " 6. Help:           HELP\n"
-              << " 7. Exit:           QUIT or EXIT\n"
+              << " 6. Active Stocks:  SYMBOLS\n"
+              << " 7. Help:           HELP\n"
+              << " 8. Exit:           QUIT or EXIT\n"
               << "==========================================================\n\n";
 }
 
@@ -74,6 +77,15 @@ int main() {
                 Display::printOrderBook(*book, *stats);
             } else {
                 std::cout << "No trading activity found for symbol '" << sym << "'.\n";
+            }
+        } else if (cmd.type == CommandType::LoadFile) {
+            auto res = CsvLoader::loadAndExecute(cmd.filePath, exchange, parser.getNextOrderIdRef());
+            if (res.success) {
+                std::cout << "\033[32mSUCCESS: Loaded " << res.ordersLoaded
+                          << " orders -> " << res.tradesExecuted << " trades executed in "
+                          << res.elapsedMs << " ms.\033[0m\n";
+            } else {
+                std::cout << "\033[31mERROR: " << res.errorMessage << "\033[0m\n";
             }
         } else if (cmd.type == CommandType::CancelOrder) {
             if (cmd.orderIdToCancel) {

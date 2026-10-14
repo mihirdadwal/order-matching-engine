@@ -15,9 +15,10 @@ set(ENGINE_SOURCES
     src/MarketStats.cpp
     src/Display.cpp
     src/Exchange.cpp
+    src/CsvLoader.cpp
 )
 
-# Main interactive engine executable
+# 1. Main interactive engine executable
 add_executable(engine
     src/main.cpp
     ${ENGINE_SOURCES}
@@ -25,8 +26,16 @@ add_executable(engine
 target_include_directories(engine PRIVATE include)
 target_compile_options(engine PRIVATE -Wall -Wextra)
 
+# 2. Performance Benchmark executable (compiled with -O3 optimization)
+add_executable(benchmark
+    bench/Benchmark.cpp
+    ${ENGINE_SOURCES}
+)
+target_include_directories(benchmark PRIVATE include)
+target_compile_options(benchmark PRIVATE -Wall -Wextra -O3)
+
 # ------------------------------------------------------------
-# GoogleTest Integration via FetchContent
+# 3. GoogleTest Integration via FetchContent
 # ------------------------------------------------------------
 set(CMAKE_TLS_VERIFY OFF)
 cmake_policy(SET CMP0135 NEW)

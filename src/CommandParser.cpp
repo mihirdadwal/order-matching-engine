@@ -63,6 +63,18 @@ ParsedCommand CommandParser::parse(const std::string& inputLine) {
         return cmd;
     }
 
+    if (action == "LOAD") {
+        cmd.type = CommandType::LoadFile;
+        std::string path;
+        if (iss >> path) {
+            cmd.filePath = path;
+        } else {
+            cmd.type = CommandType::Unknown;
+            cmd.errorMessage = "Missing file path. Format: LOAD <filePath>";
+        }
+        return cmd;
+    }
+
     if (action == "CANCEL") {
         cmd.type = CommandType::CancelOrder;
         OrderId id;
